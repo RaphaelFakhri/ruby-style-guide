@@ -155,6 +155,26 @@ module RuboCop
           RUBY
         end
 
+        def test_returns_in_logical_assignment_for_local_variable_are_not_offenses
+          assert_no_offenses(<<~RUBY)
+            def foo
+              foo ||= begin
+                return 1 if bar
+                2
+              end
+            end
+          RUBY
+
+          assert_no_offenses(<<~RUBY)
+            def foo
+              foo &&= begin
+                return 1 if bar
+                2
+              end
+            end
+          RUBY
+        end
+
         def test_returns_in_assignment_for_exception_handling_are_not_offenses
           assert_no_offenses(<<~RUBY)
             def foo

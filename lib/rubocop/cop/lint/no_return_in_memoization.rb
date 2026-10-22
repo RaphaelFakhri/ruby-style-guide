@@ -65,6 +65,14 @@ module RuboCop
       #     end
       #   end
       #
+      #   # good - not an assignment to an instance variable
+      #   def foo
+      #     foo ||= begin
+      #       return 1 if bar
+      #       2
+      #     end
+      #   end
+      #
       #   # good - proper exception handling without return
       #   def foo
       #     @foo ||= begin
@@ -76,7 +84,7 @@ module RuboCop
       class NoReturnInMemoization < ::RuboCop::Cop::Base
         MSG = "Do not `return` in `begin..end` blocks in instance variable assignment contexts."
 
-        def on_or_asgn(node)
+        def on_ivasgn(node)
           node.each_node(:kwbegin) do |kwbegin_node|
             kwbegin_node.each_node(:return) do |return_node|
               add_offense(return_node)
@@ -84,13 +92,18 @@ module RuboCop
           end
         end
 
+        def on_or_asgn(node)
+          return if node.assignment_node.lvasgn_type?
+
+          on_ivasgn(node)
+        end
+
         def on_op_asgn(node)
           return unless node.assignment_node.ivasgn_type?
 
-          on_or_asgn(node)
+          on_ivasgn(node)
         end
 
-        alias on_ivasgn on_or_asgn
         alias on_and_asgn on_or_asgn
       end
     end
